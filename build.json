@@ -1,0 +1,13 @@
+{
+	"name": "CanvasGraphicCharts",
+	"version": "0.0.1",
+	"description": "Vanilla js graphic charts in canvas",
+	"url": "",
+	"output": "canvas-graphic-charts",
+	"main": [
+		"src/main.js",
+    "src/easings.js",
+    "src/lapse.js",
+    "src/slice-pie.js"
+	]
+}

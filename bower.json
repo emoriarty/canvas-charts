@@ -1,0 +1,5 @@
+{
+	"name": "Library",
+	"version": "0.0.1",
+	"main": "dist/canvas-graphic-charts.min.js"
+}
