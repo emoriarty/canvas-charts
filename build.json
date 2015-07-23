@@ -6,8 +6,9 @@
 	"output": "canvas-graphic-charts",
 	"main": [
 		"src/main.js",
-    "src/easings.js",
-    "src/lapse.js",
-    "src/slice-pie.js"
+    	"src/easings.js",
+    	"src/lapse.js",
+    	"src/slice-pie.js",
+    	"src/charts/pie-chart.js"
 	]
 }
