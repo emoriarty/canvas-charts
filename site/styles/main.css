@@ -1,8 +1,55 @@
 .title {
-	margin-top: 2em;
+	margin-top: 2rem;
+}
+
+/* Navigation */
+nav {
+	font-size: 0.9em;
+	margin: 1rem 0 2.5rem;
+}
+
+nav ul {
+	list-style-type: none;
+	margin: 0;
+}
+
+nav ul li {
+	display: inline-block;
+	margin: 0;
+}
+
+nav ul li:after {
+	content: '/';
+	padding-left: 0.5rem;
+}
+
+nav ul li:last-child:after {
+	content: '';
+}
+
+header, footer {
+	margin: 2.5rem 0;
+}
+
+footer {
+	text-align: right;
+	font-size: 0.8em;
+}
+
+footer p {
+	margin-top: 2.5rem; 
 }
 
 canvas {
 	width: 100%;
 	height: auto;
+  margin-bottom: 2.5rem;
+}
+
+.controls {
+  margin-bottom: 2.5rem;
+}
+
+.replay {
+  width: 100%;
 }

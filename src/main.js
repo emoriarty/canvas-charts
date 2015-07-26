@@ -39,6 +39,14 @@
     ctx.clearRect( 0, 0, this.canvas().width, this.canvas().height );
 	};
 
+
+  CanvasGraphics.prototype.replay = function() {
+    this.clear();
+    if ( this.replayOpts ) {
+      this[ this.replayOpts.chart ]( this.replayOpts.args );
+    }
+  };
+
   // Private functions
   function initOptions( opts ) {
     return {

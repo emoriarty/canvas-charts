@@ -9,6 +9,12 @@
 </head>
 <body>
   <div class="container">
+    <nav class="row">
+      <ul>
+        <li><a href="http://enriquearias.info">enriquearias.info</a></li>
+        <li><a href="#">canvas-graphic-charts.js</a></li>
+      </ul>
+    </nav>
     <header class="row">
       <div class="twelve columns">
         <h1 class="title">Canvas Graphic Charts</h1>
@@ -16,28 +22,37 @@
         <p>It is just pure javascript, no need of third party libraries.</p>
       </div>
     </header>
+    <h2 class="u-full-width">Donut Charts</h2>
     <div class="row">
       <div class="four columns">
-        <canvas id="canvas-anim-whole" width="300" height="300"></canvas>
+        <canvas id="canvas-donut" width="300" height="300"></canvas>
+        <div class="controls">
+          <button class="replay">
+            <label>Click to replay</label> 
+          </button>
+        </div>
       </div>
-      <div class="four columns">
-        <canvas id="canvas-anim-slice" width="300" height="300"></canvas>
-      </div>
-      <div class="four columns">
-        <canvas id="canvas-stroke" width="300" height="300"></canvas>
+      <div class="eight columns">
+        <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nunc ac diam eget nunc facilisis congue. Class aptent taciti sociosqu ad litora torquent per conubia nostra, per inceptos himenaeos. In congue varius metus, eget convallis elit aliquam eu. Praesent finibus interdum aliquet. Donec ante libero, aliquet cursus eros quis, interdum bibendum lectus. Etiam eros magna, venenatis id egestas eleifend, volutpat sed arcu. Aenean eget nisl ipsum. Cum sociis natoque penatibus et magnis dis parturient montes, nascetur ridiculus mus. Suspendisse interdum fermentum nisl, vitae eleifend est imperdiet ac. Mauris mollis massa ac orci ornare, id sodales nisl consequat. Vivamus fringilla consequat orci, quis lacinia dolor fringilla vitae. Nulla interdum, nisi quis porttitor faucibus, arcu nisl pharetra metus, bibendum rhoncus enim risus et sem.</p>
+        <p>Sed maximus lectus mi, a pulvinar enim condimentum non. In vitae eros purus. Nullam a nisl non mi pharetra fermentum ac sed felis. Vestibulum dignissim rutrum ultricies. Integer quis bibendum diam. Aenean commodo lorem vel risus aliquam, vitae ornare nibh gravida. Aliquam semper urna massa, et viverra sapien elementum ac. Phasellus velit lacus, ultricies sed posuere eu, volutpat convallis neque.</p> 
       </div>
     </div>
+    <h2 class="u-full-width">Pie Charts</h2>
     <div class="row">
       <div class="four columns">
-        <canvas id="canvas-basic" width="300" height="300"></canvas>
+        <canvas id="canvas-pie" width="300" height="300"></canvas>
+        <div class="controls">
+          <button class="replay">
+            <label>Click to replay</label> 
+          </button>
+        </div>
       </div>
-      <div class="four columns">
-        <canvas id="canvas-colors" width="300" height="300"></canvas>
-      </div>
-      <div class="four columns">
-        <canvas id="canvas-stroke" width="300" height="300"></canvas>
+      <div class="eight columns">
+        <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nunc ac diam eget nunc facilisis congue. Class aptent taciti sociosqu ad litora torquent per conubia nostra, per inceptos himenaeos. In congue varius metus, eget convallis elit aliquam eu. Praesent finibus interdum aliquet. Donec ante libero, aliquet cursus eros quis, interdum bibendum lectus. Etiam eros magna, venenatis id egestas eleifend, volutpat sed arcu. Aenean eget nisl ipsum. Cum sociis natoque penatibus et magnis dis parturient montes, nascetur ridiculus mus. Suspendisse interdum fermentum nisl, vitae eleifend est imperdiet ac. Mauris mollis massa ac orci ornare, id sodales nisl consequat. Vivamus fringilla consequat orci, quis lacinia dolor fringilla vitae. Nulla interdum, nisi quis porttitor faucibus, arcu nisl pharetra metus, bibendum rhoncus enim risus et sem.</p>
+        <p>Sed maximus lectus mi, a pulvinar enim condimentum non. In vitae eros purus. Nullam a nisl non mi pharetra fermentum ac sed felis. Vestibulum dignissim rutrum ultricies. Integer quis bibendum diam. Aenean commodo lorem vel risus aliquam, vitae ornare nibh gravida. Aliquam semper urna massa, et viverra sapien elementum ac. Phasellus velit lacus, ultricies sed posuere eu, volutpat convallis neque.</p> 
       </div>
     </div>
+    <footer class="row"><p>© 2014 Enrique Arias Cerveró.</p></footer>
   </div>
   <script type="text/javascript" src="../dist/canvas-graphic-charts.js"></script>
   <script type="text/javascript" src="scripts/main.js"></script>

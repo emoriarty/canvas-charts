@@ -9,6 +9,7 @@
     	"src/easings.js",
     	"src/lapse.js",
     	"src/slice-pie.js",
-    	"src/charts/pie-chart.js"
+    	"src/charts/pie-chart.js",
+    	"src/charts/donut-chart.js"
 	]
 }

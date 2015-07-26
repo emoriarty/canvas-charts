@@ -40,6 +40,14 @@
     ctx.clearRect( 0, 0, this.canvas().width, this.canvas().height );
 	};
 
+
+  CanvasGraphics.prototype.replay = function() {
+    this.clear();
+    if ( this.replayOpts ) {
+      this[ this.replayOpts.chart ]( this.replayOpts.args );
+    }
+  };
+
   // Private functions
   function initOptions( opts ) {
     return {
@@ -361,24 +369,18 @@
 	 *  pie:        pie is an object which contains the next structure -> { x, y, radius }.
 	 *  values:     It can be an array with any kind of value you like to represent in the pie chart -> [ float, ... ],
    *                or an array of object containing the values with the color (hexadecimal or rgb) for that pie -> [ { value, color } ] 
-   *  arcOpts:    Options to change the pie characteristics and behavior -> { stroke, strokeColor, lineWidth, angleStart, inner: true|false }
+   *  arcOpts:    Options to change the pie characteristics and behavior -> { stroke, strokeColor, lineWidth, angleStart }
    *  easingOpts: { easing, duration, whole: true|false }
 	 * 
 	 */
-	function pieChart( pie, values, arcOpts, easingOpts ) {
-    arcOpts = arcOpts || {};
-    pie     = pie || { x: 100, y: 100, radius: 50 };
+	function pieChart( args ) {
+    arcOpts    = args.arcOpts || {};
+    pie        = args.pie || { x: 100, y: 100, radius: 50 };
+    values     = args.values;
+    arcOpts    = args.arcOpts;
+    easingOpts = args.easingOpts;
 
     var ctx = this.canvas().getContext( '2d' );
-
-    /*if ( opts.stroke ) {
-      ctx.beginPath();
-      opts.lineWidth && ( ctx.lineWidth = opts.lineWidth );
-      opts.strokeColor && ( ctx.strokeStyle = opts.strokeColor );
-      ctx.arc( center.x, center.x, center.radius, 0, maxRadian, true );
-      ctx.stroke();
-      ctx.closePath();
-    }*/
     
     if ( !easingOpts ) {
       drawPie( ctx, pie, values, arcOpts );
@@ -388,8 +390,9 @@
         drawAnimatedWholePie.call( this, ctx, pie, values, arcOpts, easingOpts );
       else
         drawAnimatedPieBySlice.call( this, ctx, pie, values, arcOpts, easingOpts );
-
     }
+
+    this.replayOpts = { chart: 'pieChart', args: args };
 	}
 
 
@@ -546,5 +549,37 @@
       root.CanvasGraphics = {};
     }
     root.CanvasGraphics.prototype.pieChart = pieChart;
+	}
+}( self ));
+
+(function( root ){
+	/**
+	 * PARAMS
+	 * ------
+	 *  pie:        pie is an object which contains the next structure -> { x, y, radius }.
+	 *  values:     It can be an array with any kind of value you like to represent in the pie chart -> [ float, ... ],
+   *                or an array of object containing the values with the color (hexadecimal or rgb) for that pie -> [ { value, color } ] 
+   *  arcOpts:    Options to change the pie characteristics and behavior -> { stroke, strokeColor, lineWidth, angleStart }
+   *  easingOpts: { easing, duration, whole: true|false }
+	 * 
+	 */
+	function donutChart( args ) {
+    args.arcOpts.inner = true;
+
+    this.pieChart( args );
+    this.replayOpts = { chart: 'donutChart', args: args };
+	}
+
+
+
+  if ( typeof module != "undefined" && module !== null && module.exports ) {
+		module.exports = CanvasGraphics;
+	} else if ( typeof define === "function" && define.amd ) {
+		define( function() { return CanvasGraphics; } );
+	} else {
+		if ( !root.CanvasGraphics ) { 
+      root.CanvasGraphics = {};
+    }
+    root.CanvasGraphics.prototype.donutChart = donutChart;
 	}
 }( self ));
