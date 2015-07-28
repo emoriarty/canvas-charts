@@ -1,10 +1,5 @@
 (function( root ){
 
-	if (DEBUG)
-	{
-		console.log("Library started");
-	}
-
   // Global vars
   var NOT_EASING_FUNCTIONS = [ 'easings' ],
       EASING_PROPS;

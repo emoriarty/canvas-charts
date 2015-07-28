@@ -1,10 +1,5 @@
 (function( root ){
 
-	if (DEBUG)
-	{
-		console.log("Library started");
-	}
-
   /**
    * This class is used to manage the elapsing time during the animation.
    * It work in milliseconds.

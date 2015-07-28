@@ -1,10 +1,5 @@
 (function( root ){
 
-	if (DEBUG)
-	{
-		console.log("Library started");
-	}
-
   function SlicePie( pie, color ) {
     this.pie   = pie;
     this.color = color;

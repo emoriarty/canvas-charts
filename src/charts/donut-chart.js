@@ -16,8 +16,6 @@
     this.replayOpts = { chart: 'donutChart', args: args };
 	}
 
-
-
   if ( typeof module != "undefined" && module !== null && module.exports ) {
 		module.exports = CanvasGraphics;
 	} else if ( typeof define === "function" && define.amd ) {

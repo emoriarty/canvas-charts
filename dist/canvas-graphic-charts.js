@@ -76,11 +76,6 @@
 
 (function( root ){
 
-	if (true)
-	{
-		console.log("Library started");
-	}
-
   // Global vars
   var NOT_EASING_FUNCTIONS = [ 'easings' ],
       EASING_PROPS;
@@ -251,11 +246,6 @@
 
 (function( root ){
 
-	if (true)
-	{
-		console.log("Library started");
-	}
-
   /**
    * This class is used to manage the elapsing time during the animation.
    * It work in milliseconds.
@@ -298,11 +288,6 @@
 }( self ));
 
 (function( root ){
-
-	if (true)
-	{
-		console.log("Library started");
-	}
 
   function SlicePie( pie, color ) {
     this.pie   = pie;
@@ -569,8 +554,6 @@
     this.pieChart( args );
     this.replayOpts = { chart: 'donutChart', args: args };
 	}
-
-
 
   if ( typeof module != "undefined" && module !== null && module.exports ) {
 		module.exports = CanvasGraphics;
