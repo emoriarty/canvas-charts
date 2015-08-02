@@ -15,7 +15,7 @@
    */
 	function CanvasGraphics( opts ) {
 		this.opts = initOptions( opts );
-		this.cnvs = init( this.opts );
+		 init.call( this, this.opts );
 	}
 
   /**
@@ -34,18 +34,50 @@
     return this.cnvs;
   };
 
+  /**
+   * Clear the canvas
+   */
 	CanvasGraphics.prototype.clear = function() {
     var ctx = this.canvas().getContext( '2d' );
 
     ctx.clearRect( 0, 0, this.canvas().width, this.canvas().height );
 	};
 
+  /**
+   * Redraw the chart preventing the easing
+   */
+  CanvasGraphics.prototype.redraw = function() {
+    this.clear();
+    if ( this.replayOpts ) {
 
+      // Storing temporary easing options
+      var tmpEasingOpts = this.replayOpts.args.easingOpts;
+
+      // Setting null the easing options
+      this.replayOpts.args.easingOpts = null;
+      this[ this.replayOpts.chart ]( this.replayOpts.args );
+
+      // Restoting easing options
+      this.replayOpts.args.easingOpts = tmpEasingOpts;
+    }
+  };
+
+  /**
+   * Redraw the chart with all args, this will include the easing animation
+   */
   CanvasGraphics.prototype.replay = function() {
     this.clear();
     if ( this.replayOpts ) {
       this[ this.replayOpts.chart ]( this.replayOpts.args );
     }
+  };
+
+  CanvasGraphics.prototype.capturePosition = function( ev ) {
+    var rect = this.canvas().getBoundingClientRect(),
+        mx   = Math.round( ( ev.clientX - rect.left ) / ( rect.right - rect.left ) * this.canvas().width ),
+        my   = Math.round( ( ev.clientY - rect.top ) / ( rect.bottom - rect.top ) * this.canvas().height );
+
+    return { x: mx, y: my };
   };
 
   // Private functions
@@ -59,10 +91,12 @@
     var canvas;
 
     if ( opts.id ) {
-      canvas = document.getElementById( opts.id );
+      this.cnvs = document.getElementById( opts.id );
     }
 
-    return canvas;
+    if ( this.cnvs ) {
+      this.state = new CanvasGraphics.CanvasState( this );
+    }
   }
 	
   if ( typeof module != "undefined" && module !== null && module.exports ) {
@@ -288,65 +322,58 @@
 }( self ));
 
 (function( root ){
-
-  function SlicePie( pie, color ) {
-    this.pie   = pie;
-    this.color = color;
+  function CanvasState( canvasChart ) {
+    this.canvasChart = canvasChart;
+    this.canvas = canvasChart.canvas();
+    this.elements = [];
   }
 
-  /**
-   * PARAMS
-   * ------
-   *  ctx
-   *  opts: { stroke, lineWidth, strokeColor }
-   */
-  SlicePie.prototype.draw = function ( ctx, radian, maxRadian, opts ) {
-    opts = opts || {};
+  CanvasState.prototype.addListener = function( type, cb ) {
+    var fn = function( ev ) {
 
-    if ( this.color ) ctx.fillStyle = this.color;
+      // To obtain the X/Y in CANVAS space, you would need to take your X (Y), 
+      // divide by the client rect width (height) and multiply that by the canvas width (height)
+      var coord = this.canvasChart.capturePosition( ev );
 
-    ctx.beginPath();
-    ctx.moveTo( this.pie.x, this.pie.y );
-    ctx.arc( this.pie.x, 
-      this.pie.y, 
-      this.pie.radius, 
-      radian, 
-      maxRadian, 
-      false 
-    );
-    ctx.lineTo( this.pie.x, this.pie.y );
-    ctx.closePath();
+      for ( var i = this.elements.length - 1; i >= 0; i-- ) {
+        var el = this.elements[ i ];
+        
+        if ( el.contains( coord.x, coord.y ) ) {
+          cb( ev, el );
+        }
+      }
+    }.bind( this );
 
-    ctx.fill();
+    this.canvas.addEventListener( type, fn );
 
-    if ( opts.stroke ) {
-      if ( opts.lineWidth ) ctx.lineWidth = opts.lineWidth;
-      if ( opts.strokeColor ) ctx.strokeStyle = opts.strokeColor;
-      ctx.stroke();
-    }
-
-    if ( opts.inner ) {
-      ctx.beginPath();
-      ctx.fillStyle = opts.strokeColor;
-      ctx.moveTo( this.pie.x, this.pie.y );
-      ctx.arc( this.pie.x, this.pie.y, this.pie.radius / 3 * 2, radian, maxRadian, false );
-      ctx.closePath();
-      ctx.fill();
-    }
+    return fn;
   };
 
+  CanvasState.prototype.removeListener = function( type, cb) {
+    this.canvas.addEventListener( type, fn );
+  };
+
+  CanvasState.prototype.addElement = function( obj ) {
+    for ( var i = this.elements.length - 1; i >= 0; i-- ) {
+      var el = this.elements[ i ];
+      if ( el === obj ) return;
+    }
+
+    this.elements.push( obj );
+  };
+
+
   if ( typeof module != "undefined" && module !== null && module.exports ) {
-		module.exports = SlicePie;
-	} else if ( typeof define === "function" && define.amd ) {
-		define( function() { return SlicePie; } );
-	} else {
-		if ( !root.CanvasGraphics ) { 
+    module.exports = CanvasGraphics;
+  } else if ( typeof define === "function" && define.amd ) {
+    define( function() { return CanvasGraphics; } );
+  } else {
+    if ( !root.CanvasGraphics ) { 
       root.CanvasGraphics = {};
     }
-    root.CanvasGraphics.SlicePie = SlicePie;
-	}
+    root.CanvasGraphics.CanvasState = CanvasState;
+  }
 }( self ));
-
 (function( root ){
 	/**
 	 * PARAMS
@@ -355,7 +382,7 @@
 	 *  values:     It can be an array with any kind of value you like to represent in the pie chart -> [ float, ... ],
    *                or an array of object containing the values with the color (hexadecimal or rgb) for that pie -> [ { value, color } ] 
    *  arcOpts:    Options to change the pie characteristics and behavior -> { stroke, strokeColor, lineWidth, angleStart }
-   *  easingOpts: { easing, duration, whole: true|false }
+   *  easingOpts: { easing, duration }
 	 * 
 	 */
 	function pieChart( args ) {
@@ -368,32 +395,33 @@
     var ctx = this.canvas().getContext( '2d' );
     
     if ( !easingOpts ) {
-      drawPie( ctx, pie, values, arcOpts );
+      drawPie.call( this, ctx, pie, values, arcOpts );
     } else {
-
-      if ( easingOpts.whole )
-        drawAnimatedWholePie.call( this, ctx, pie, values, arcOpts, easingOpts );
-      else
-        drawAnimatedPieBySlice.call( this, ctx, pie, values, arcOpts, easingOpts );
+      drawAnimatedWholePie.call( this, ctx, pie, values, arcOpts, easingOpts );
     }
 
     this.replayOpts = { chart: 'pieChart', args: args };
 	}
 
+  /*
+   *  Private functions
+   */
+  function composeSlice( pie, val, donut ) {
+    if ( donut )
+      return new CanvasGraphics.DonutSlice( pie, val );
 
-  // Private functions
-  function composeSlice( val ) {
-    var obj = {};
+    return new CanvasGraphics.SlicePie( pie, val );
+  }
 
-    if ( typeof val === 'object' ) {
-      obj.value = val.value;
-      obj.color = val.color;
-    } else {
-      obj.value = val;
-      obj.color = '#' + ( Math.round( 16733683 * Math.random() ) ).toString( 16 );
-    }
+  function composeSlices( pie, values, donut ) {
+    var slices = [];
 
-    return obj;
+    // Creating the pie slices
+    values.forEach( function( obj ) {
+      slices.push( composeSlice( pie, obj, donut ) );
+    } );
+
+    return slices;
   }
 
   function sumValues( values ) {
@@ -411,99 +439,47 @@
   }
 
   function drawPie( ctx, pie, values, opts ) {
-    var sliceVal, startRadian, endRadian,
-        maxValue = sumValues( values );
-
-    startRadian = endRadian = 0;
+    var pieSlice, startRadian, endRadian, maxValue = sumValues( values );
 
     if ( opts.angleStart ) {
       endRadian = startRadian = opts.angleStart * Math.PI / 180;
     }
 
     for( var i = 0; i < values.length; i++ ) {
-      sliceVal  = composeSlice( values[ i ] );
-      endRadian += ((sliceVal.value * (Math.PI * 2)) / maxValue );
+      pieSlice  = composeSlice( pie, values[ i ] );
+      endRadian += (pieSlice.value * (Math.PI * 2)) / maxValue;
 
-      drawSlice( ctx, pie, sliceVal.color, startRadian, endRadian, opts );
+      slicePie.draw( ctx, startRadian, endRadian, opts );
 
-      startRadian += ((sliceVal.value * (Math.PI * 2)) / maxValue );
+      startRadian += (pieSlice.value * (Math.PI * 2)) / maxValue;
     }
   }
 
-  function drawSlice( ctx, pie, color, radian, maxRadian, opts ) {
+  function drawSlice( pie, color, radian, maxRadian, opts ) {
     var slicePie = new CanvasGraphics.SlicePie( pie, color );
     
-    slicePie.draw( ctx, radian, maxRadian, opts );
+    slicePie.draw( radian, maxRadian, opts );
 
     return slicePie;
   }
 
-  function drawAnimatedPieBySlice( ctx, pie, values, arcOpts, easingOpts ) {
-    var maxRadians   = [],
-        lapse        = new CanvasGraphics.Lapse( easingOpts.duration ),
-        maxValue     = sumValues( values ),
-        sliceVal     = composeSlice( values.shift() ),
-        offsetRadian, startRadian, loopRadian, endRadian;
-    
-    offsetRadian = startRadian = loopRadian = endRadian = 0;
-
-    if ( arcOpts.angleStart ) {
-      offsetRadian = arcOpts.angleStart * Math.PI / 180;
-      loopRadian = startRadian = offsetRadian;
-    }
-
-    ( function drawFrame() {
-        endRadian = (sliceVal.value * (Math.PI * 2)) / maxValue ;
-
-        if ( lapse.check() && loopRadian < endRadian + startRadian ) {
-          this.clear();
-          maxRadians.forEach( function( obj ) {
-            drawSlice( ctx, pie, obj.color, obj.r, obj.mxr + obj.r, arcOpts );  
-          } );
-          drawSlice( ctx, pie, sliceVal.color, startRadian, loopRadian, arcOpts );
-
-          loopRadian = CanvasGraphics.Easings[ easingOpts.easing ]( lapse.getElapsedTime(), 
-            0, 
-            Math.PI * 2,  
-            easingOpts.duration ) + offsetRadian;
-
-        } else {
-          drawSlice( ctx, pie, sliceVal.color, startRadian, endRadian + startRadian, arcOpts );
-          maxRadians.push( { r: startRadian, mxr: endRadian, color: sliceVal.color } );
-
-          startRadian += endRadian;
-          sliceVal    = composeSlice( values.shift() );
-        }
-
-        if ( endRadian < Math.PI * 2 ) window.requestAnimationFrame( drawFrame.bind( this ) );
-    }.call( this ) );
-  }
-
-  function drawingWhole( ctx, pie, slices, start, step, end, max, opts ) {
-    slices.forEach( function( slice ) {
-      step = slice.value * end / max;
-      drawSlice( ctx, pie, slice.color, start, step + start, opts );
-      return start += step;
-    } );
-  }
-
   function drawAnimatedWholePie( ctx, pie, values, arcOpts, easingOpts ) {
-    var lapse        = new CanvasGraphics.Lapse( easingOpts.duration ),
-        maxValue     = sumValues( values ),
-        maxRadians, composedValues,
+    var lapse      = new CanvasGraphics.Lapse( easingOpts.duration ),
+        maxValue   = sumValues( values ),
+        slices     = composeSlices( pie, values, arcOpts.inner ), // Creating the pie slices 
+        maxRadians = [],
         offsetRadian, endRadian, startRadian, stepMaxRadian;
-    
-    maxRadians = composedValues = [];
-    offsetRadian = endRadian = startRadian = stepMaxRadian = 0;
 
+    // Where the pie begins to be drawn (clockwise)
     if ( arcOpts.angleStart ) {
       offsetRadian = arcOpts.angleStart * Math.PI / 180;
     }
 
-    values.forEach( function( obj ) {
-      composedValues.push( composeSlice( obj ) );
-    } );
-    
+    // Store slices in the canvas state
+    slices.forEach( function (slice) {
+      this.state.addElement( slice );
+    }.bind( this ));
+    this.state.addListener( 'click', function() { console.log( 'click in' ); } );
 
     ( function drawFrame() {
         startRadian = offsetRadian;
@@ -511,19 +487,29 @@
         if ( lapse.check() ) {
           this.clear();
 
-          startRadian = drawingWhole( ctx, pie, composedValues, startRadian, stepMaxRadian, endRadian, maxValue, arcOpts );
-
-          endRadian = CanvasGraphics.Easings[ easingOpts.easing ]( lapse.getElapsedTime(), 
+          startRadian = drawingWhole( ctx, slices, startRadian, stepMaxRadian, endRadian, maxValue, arcOpts );
+          endRadian   = CanvasGraphics.Easings[ easingOpts.easing ]( 
+            lapse.getElapsedTime(), 
             0, 
             Math.PI * 2,  
             easingOpts.duration );
 
           window.requestAnimationFrame( drawFrame.bind( this ) );
         } else {
-          startRadian = drawingWhole( ctx, pie, composedValues, startRadian, stepMaxRadian, Math.PI * 2, maxValue, arcOpts );
+          startRadian = drawingWhole( ctx, slices, startRadian, stepMaxRadian, Math.PI * 2, maxValue, arcOpts );
         }
     }.call( this ) );
   }
+
+  function drawingWhole( ctx, slices, start, step, end, max, opts ) {
+    slices.forEach( function( slice ) {
+      step = slice.value * end / max;
+      slice.draw( ctx, start, step + start, opts );
+      return start += step;
+    } );
+  }
+
+
 	
   if ( typeof module != "undefined" && module !== null && module.exports ) {
 		module.exports = CanvasGraphics;
@@ -536,7 +522,6 @@
     root.CanvasGraphics.prototype.pieChart = pieChart;
 	}
 }( self ));
-
 (function( root ){
 	/**
 	 * PARAMS
@@ -565,4 +550,196 @@
     }
     root.CanvasGraphics.prototype.donutChart = donutChart;
 	}
+}( self ));
+
+(function( root ){
+
+  function SlicePie( pie, opts ) {
+    this.pie    = pie;
+    this.id     = opts.id;
+    this.color  = opts.color;
+    this.value  = opts.value;
+  }
+
+  /**
+   * PARAMS
+   * ------
+   *  ctx
+   *  startRadian
+   *  endRadian
+   *  opts: { stroke, lineWidth, strokeColor }
+   */
+  SlicePie.prototype.draw = function ( ctx, startRadian, endRadian, opts ) {
+    opts = opts || {};
+
+    // Storing values for redrawing purposes
+    this.ctx         = ctx;
+    this.startRadian = startRadian;
+    this.endRadian   = endRadian;
+    this.opts        = opts;
+
+    if ( this.color ) ctx.fillStyle = this.color;
+
+    this.defineArc();
+    ctx.lineTo( this.pie.x, this.pie.y );
+    ctx.closePath();
+
+    ctx.fill();
+
+    if ( opts.stroke ) {
+      if ( opts.lineWidth ) ctx.lineWidth = opts.lineWidth;
+      if ( opts.strokeColor ) ctx.strokeStyle = opts.strokeColor;
+      ctx.stroke();
+    }
+
+    /*if ( opts.inner ) {
+      ctx.beginPath();
+      ctx.fillStyle = opts.strokeColor;
+      ctx.moveTo( this.pie.x, this.pie.y );
+      ctx.arc( this.pie.x, this.pie.y, this.pie.radius / 3 * 2, startRadian, endRadian, false );
+      ctx.closePath();
+      ctx.fill();
+    }*/
+  };
+
+  /**
+   * This method redraws the last drawn shape reusing the arguments.
+   */
+  SlicePie.prototype.redraw = function () {
+    this.draw( this.ctx, this.startRadian, this.endRadian, this.opts );
+  };
+
+  /**
+   * The arc with represents the pie slice is defined.
+   * This is useful to know which slice was selected in the canvas.
+   */
+  SlicePie.prototype.defineArc = function () {
+    var ctx = this.ctx;
+
+    ctx.beginPath();
+    ctx.moveTo( this.pie.x, this.pie.y );
+    ctx.arc( this.pie.x, 
+      this.pie.y, 
+      this.pie.radius, 
+      this.startRadian, 
+      this.endRadian, 
+      false 
+    );
+  };
+
+  /*
+   * Check if the coordinates x and y are over the slice
+   */
+  SlicePie.prototype.contains = function ( mx, my ) { 
+    this.defineArc();
+    return this.ctx.isPointInPath( mx, my );
+  };
+
+
+  if ( typeof module != "undefined" && module !== null && module.exports ) {
+		module.exports = SlicePie;
+	} else if ( typeof define === "function" && define.amd ) {
+		define( function() { return SlicePie; } );
+	} else {
+		if ( !root.CanvasGraphics ) { 
+      root.CanvasGraphics = {};
+    }
+    root.CanvasGraphics.SlicePie = SlicePie;
+	}
+}( self ));
+
+(function( root ){
+
+  function DonutSlice( pie, opts ) {
+    this.pie    = pie;
+    this.id     = opts.id;
+    this.color  = opts.color;
+    this.value  = opts.value;
+  }
+
+  /**
+   * PARAMS
+   * ------
+   *  ctx
+   *  startRadian
+   *  endRadian
+   *  opts: { stroke, lineWidth, strokeColor }
+   */
+  DonutSlice.prototype.draw = function ( ctx, startRadian, endRadian, opts ) {
+    opts = opts || {};
+
+    // Storing values for redrawing purposes
+    this.ctx         = ctx;
+    this.startRadian = startRadian;
+    this.endRadian   = endRadian;
+    this.opts        = opts;
+
+    if ( this.color ) ctx.fillStyle = this.color;
+
+    this.defineArc();
+    ctx.lineTo( this.pie.x, this.pie.y );
+    ctx.closePath();
+
+    ctx.fill();
+
+    if ( opts.stroke ) {
+      if ( opts.lineWidth ) ctx.lineWidth = opts.lineWidth;
+      if ( opts.strokeColor ) ctx.strokeStyle = opts.strokeColor;
+      ctx.stroke();
+    }
+
+    if ( opts.inner ) {
+      ctx.beginPath();
+      ctx.fillStyle = opts.strokeColor;
+      ctx.moveTo( this.pie.x, this.pie.y );
+      ctx.arc( this.pie.x, this.pie.y, this.pie.radius / 3 * 2, startRadian, endRadian, false );
+      ctx.closePath();
+      ctx.fill();
+    }
+  };
+
+  /**
+   * This method redraws the last drawn shape reusing the arguments.
+   */
+  DonutSlice.prototype.redraw = function () {
+    this.draw( this.ctx, this.startRadian, this.endRadian, this.opts );
+  };
+
+  /**
+   * The arc with represents the pie slice is defined.
+   * This is useful to know which slice was selected in the canvas.
+   */
+  DonutSlice.prototype.defineArc = function () {
+    var ctx = this.ctx;
+
+    ctx.beginPath();
+    ctx.moveTo( this.pie.x, this.pie.y );
+    ctx.arc( this.pie.x, 
+      this.pie.y, 
+      this.pie.radius, 
+      this.startRadian, 
+      this.endRadian, 
+      false 
+    );
+  };
+
+  /*
+   * Check if the coordinates x and y are over the slice
+   */
+  DonutSlice.prototype.contains = function ( mx, my ) { 
+    this.defineArc();
+    return this.ctx.isPointInPath( mx, my );
+  };
+  
+
+  if ( typeof module != "undefined" && module !== null && module.exports ) {
+    module.exports = DonutSlice;
+  } else if ( typeof define === "function" && define.amd ) {
+    define( function() { return DonutSlice; } );
+  } else {
+    if ( !root.CanvasGraphics ) { 
+      root.CanvasGraphics = {};
+    }
+    root.CanvasGraphics.DonutSlice = DonutSlice;
+  }
 }( self ));

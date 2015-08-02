@@ -6,10 +6,15 @@
 	"output": "canvas-graphic-charts",
 	"main": [
 		"src/main.js",
-    	"src/easings.js",
-    	"src/lapse.js",
-    	"src/slice-pie.js",
-    	"src/charts/pie-chart.js",
-    	"src/charts/donut-chart.js"
+
+  	"src/classes/easings.js",
+  	"src/classes/lapse.js",
+    "src/classes/canvas-state.js",
+
+  	"src/charts/pie-chart.js",
+  	"src/charts/donut-chart.js",
+
+    "src/elements/slice-pie.js",
+    "src/elements/donut-slice.js"
 	]
 }

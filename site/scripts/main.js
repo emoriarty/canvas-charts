@@ -19,11 +19,11 @@
         radius: 148 
       }, 
       values: [ 
-        { value: 10, color: '#ECD078' }, 
-        { value: 30, color: '#D95B43' }, 
-        { value: 20, color: '#C02942' }, 
-        { value: 60, color: '#542437' }, 
-        { value: 40, color: '#53777A' }
+        { id: 1, value: 10, color: '#ECD078' }, 
+        { id: 2, value: 30, color: '#D95B43' }, 
+        { id: 3, value: 20, color: '#C02942' }, 
+        { id: 4, value: 60, color: '#542437' }, 
+        { id: 5, value: 40, color: '#53777A' }
       ],
       arcOpts: { 
         stroke: true, 
@@ -33,9 +33,8 @@
       },
       easingOpts: {
         easing: CanvasGraphics.Easings.easings.easeInOutExpo, 
-        duration: 1000,
-        whole: true
-      } 
+        duration: 1000
+      }
     } );
     addReplayListener( canvasPie );
 
@@ -45,10 +44,10 @@
         y: canvasDonut.canvas().height / 2, 
         radius: 148 
       }, 
-      values: [ { value: 20, color: '#ECD078' }, 
-        { value: 40, color: '#D95B43' }, 
-        { value: 50, color: '#542437' }, 
-        { value: 20, color: '#53777A' } 
+      values: [ { id: 0, value: 20, color: '#ECD078' }, 
+        { id: 1, value: 40, color: '#D95B43' }, 
+        { id: 2, value: 50, color: '#542437' }, 
+        { id: 3, value: 20, color: '#53777A' } 
       ],
       arcOpts: { 
         stroke: true, 
@@ -58,8 +57,7 @@
       },
       easingOpts: { 
         easing: CanvasGraphics.Easings.easings.easeOutCirc, 
-        duration: 1000,
-        whole: true
+        duration: 1000
       } 
     } );
     addReplayListener( canvasDonut );
