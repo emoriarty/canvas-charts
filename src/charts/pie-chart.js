@@ -64,29 +64,34 @@
   }
 
   function drawPie( ctx, pie, values, opts, events ) {
-    var pieSlice, startRadian, endRadian, maxValue = sumValues( values );
+    var i, pieSlice, startRadian, endRadian, maxValue = sumValues( values );
 
     if ( opts.angleStart ) {
       endRadian = startRadian = opts.angleStart * Math.PI / 180;
     }
 
     // Creating elements and adding them in state object
-    for( var i = 0; i < values.length; i++ ) {
-      pieSlice  = composeSlice( pie, values[ i ] );
+    if ( this.state.elements.length === 0 ) {
+      for ( i = 0; i < values.length; i++ ) {
+        pieSlice = composeSlice( pie, values[ i ] );
+        this.state.addElement( pieSlice );
+      }
+
+      // Adding events
+      if ( events ) {
+        for ( var prop in events ) {
+          this.state.addListener( prop, events[ prop ] );
+        }
+      }
+    }
+
+    for( i = 0; i < this.state.elements.length; i++ ) {
+      pieSlice = this.state.elements[ i ];
       endRadian += (pieSlice.value * (Math.PI * 2)) / maxValue;
-
       pieSlice.draw( ctx, startRadian, endRadian, opts );
-      this.state.addElement( pieSlice );
-
       startRadian += (pieSlice.value * (Math.PI * 2)) / maxValue;
     }
 
-    // Adding events
-    if ( events ) {
-      for ( var prop in events ) {
-        this.state.addListener( prop, events[ prop ] );
-      }
-    }
   }
 
   function drawSlice( pie, color, radian, maxRadian, opts ) {
