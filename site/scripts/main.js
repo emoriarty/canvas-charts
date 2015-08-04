@@ -31,9 +31,10 @@
         lineWidth: 2 ,
         angleStart: -90 
       },
-      easingOpts: {
-        easing: CanvasGraphics.Easings.easings.easeInOutExpo, 
-        duration: 1000
+      events: {
+        'click': function( ev, el ) {
+          alert( 'The slice selected is ' + el.id );
+        }
       }
     } );
     addReplayListener( canvasPie );
@@ -58,7 +59,12 @@
       easingOpts: { 
         easing: CanvasGraphics.Easings.easings.easeOutCirc, 
         duration: 1000
-      } 
+      },
+      events: {
+        'click': function( ev, el ) {
+          alert( 'The slice selected is ' + el.id );
+        }
+      }
     } );
     addReplayListener( canvasDonut );
   }

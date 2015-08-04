@@ -391,13 +391,14 @@
     values     = args.values;
     arcOpts    = args.arcOpts;
     easingOpts = args.easingOpts;
+    events     = args.events;
 
     var ctx = this.canvas().getContext( '2d' );
     
     if ( !easingOpts ) {
-      drawPie.call( this, ctx, pie, values, arcOpts );
+      drawPie.call( this, ctx, pie, values, arcOpts, events );
     } else {
-      drawAnimatedWholePie.call( this, ctx, pie, values, arcOpts, easingOpts );
+      drawAnimatedWholePie.call( this, ctx, pie, values, arcOpts, easingOpts, events );
     }
 
     this.replayOpts = { chart: 'pieChart', args: args };
@@ -438,32 +439,41 @@
     return maxValue;
   }
 
-  function drawPie( ctx, pie, values, opts ) {
+  function drawPie( ctx, pie, values, opts, events ) {
     var pieSlice, startRadian, endRadian, maxValue = sumValues( values );
 
     if ( opts.angleStart ) {
       endRadian = startRadian = opts.angleStart * Math.PI / 180;
     }
 
+    // Creating elements and adding them in state object
     for( var i = 0; i < values.length; i++ ) {
       pieSlice  = composeSlice( pie, values[ i ] );
       endRadian += (pieSlice.value * (Math.PI * 2)) / maxValue;
 
-      slicePie.draw( ctx, startRadian, endRadian, opts );
+      pieSlice.draw( ctx, startRadian, endRadian, opts );
+      this.state.addElement( pieSlice );
 
       startRadian += (pieSlice.value * (Math.PI * 2)) / maxValue;
+    }
+
+    // Adding events
+    if ( events ) {
+      for ( var prop in events ) {
+        this.state.addListener( prop, events[ prop ] );
+      }
     }
   }
 
   function drawSlice( pie, color, radian, maxRadian, opts ) {
-    var slicePie = new CanvasGraphics.SlicePie( pie, color );
+    var pieSlice = new CanvasGraphics.SlicePie( pie, color );
     
-    slicePie.draw( radian, maxRadian, opts );
+    pieSlice.draw( radian, maxRadian, opts );
 
-    return slicePie;
+    return pieSlice;
   }
 
-  function drawAnimatedWholePie( ctx, pie, values, arcOpts, easingOpts ) {
+  function drawAnimatedWholePie( ctx, pie, values, arcOpts, easingOpts, events ) {
     var lapse      = new CanvasGraphics.Lapse( easingOpts.duration ),
         maxValue   = sumValues( values ),
         slices     = composeSlices( pie, values, arcOpts.inner ), // Creating the pie slices 
@@ -522,6 +532,7 @@
     root.CanvasGraphics.prototype.pieChart = pieChart;
 	}
 }( self ));
+
 (function( root ){
 	/**
 	 * PARAMS
