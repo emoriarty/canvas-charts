@@ -349,7 +349,7 @@
     return fn;
   };
 
-  CanvasState.prototype.removeListener = function( type, cb) {
+  CanvasState.prototype.removeListener = function( type, cb ) {
     this.canvas.addEventListener( type, fn );
   };
 
@@ -374,6 +374,7 @@
     root.CanvasGraphics.CanvasState = CanvasState;
   }
 }( self ));
+
 (function( root ){
 	/**
 	 * PARAMS
@@ -414,15 +415,23 @@
     return new CanvasGraphics.SlicePie( pie, val );
   }
 
-  function composeSlices( pie, values, donut ) {
-    var slices = [];
+  function composeSlices( state, pie, values, donut, events ) {
+    var pieSlice;
+    
+    // Creating elements and adding them in state object
+    if ( state.elements.length === 0 ) {
+      for ( var i = 0; i < values.length; i++ ) {
+        pieSlice = composeSlice( pie, values[ i ], donut );
+        state.addElement( pieSlice );
+      }
 
-    // Creating the pie slices
-    values.forEach( function( obj ) {
-      slices.push( composeSlice( pie, obj, donut ) );
-    } );
-
-    return slices;
+      // Adding events
+      if ( events ) {
+        for ( var prop in events ) {
+          state.addListener( prop, events[ prop ] );
+        }
+      }
+    }
   }
 
   function sumValues( values ) {
@@ -440,29 +449,17 @@
   }
 
   function drawPie( ctx, pie, values, opts, events ) {
-    var i, pieSlice, startRadian, endRadian, maxValue = sumValues( values );
+    var startRadian, endRadian, maxValue = sumValues( values );
 
     if ( opts.angleStart ) {
       endRadian = startRadian = opts.angleStart * Math.PI / 180;
     }
 
     // Creating elements and adding them in state object
-    if ( this.state.elements.length === 0 ) {
-      for ( i = 0; i < values.length; i++ ) {
-        pieSlice = composeSlice( pie, values[ i ] );
-        this.state.addElement( pieSlice );
-      }
+    composeSlices( this.state, pie, values, opts.inner, events );
 
-      // Adding events
-      if ( events ) {
-        for ( var prop in events ) {
-          this.state.addListener( prop, events[ prop ] );
-        }
-      }
-    }
-
-    for( i = 0; i < this.state.elements.length; i++ ) {
-      pieSlice = this.state.elements[ i ];
+    for( var i = 0; i < this.state.elements.length; i++ ) {
+      var pieSlice = this.state.elements[ i ];
       endRadian += (pieSlice.value * (Math.PI * 2)) / maxValue;
       pieSlice.draw( ctx, startRadian, endRadian, opts );
       startRadian += (pieSlice.value * (Math.PI * 2)) / maxValue;
@@ -481,7 +478,6 @@
   function drawAnimatedWholePie( ctx, pie, values, arcOpts, easingOpts, events ) {
     var lapse      = new CanvasGraphics.Lapse( easingOpts.duration ),
         maxValue   = sumValues( values ),
-        slices     = composeSlices( pie, values, arcOpts.inner ), // Creating the pie slices 
         maxRadians = [],
         offsetRadian, endRadian, startRadian, stepMaxRadian;
 
@@ -490,11 +486,7 @@
       offsetRadian = arcOpts.angleStart * Math.PI / 180;
     }
 
-    // Store slices in the canvas state
-    slices.forEach( function (slice) {
-      this.state.addElement( slice );
-    }.bind( this ));
-    this.state.addListener( 'click', function() { console.log( 'click in' ); } );
+    composeSlices( this.state, pie, values, arcOpts.inner, events );
 
     ( function drawFrame() {
         startRadian = offsetRadian;
@@ -502,7 +494,7 @@
         if ( lapse.check() ) {
           this.clear();
 
-          startRadian = drawingWhole( ctx, slices, startRadian, stepMaxRadian, endRadian, maxValue, arcOpts );
+          startRadian = drawingWhole( ctx, this.state.elements, startRadian, stepMaxRadian, endRadian, maxValue, arcOpts );
           endRadian   = CanvasGraphics.Easings[ easingOpts.easing ]( 
             lapse.getElapsedTime(), 
             0, 
@@ -511,7 +503,7 @@
 
           window.requestAnimationFrame( drawFrame.bind( this ) );
         } else {
-          startRadian = drawingWhole( ctx, slices, startRadian, stepMaxRadian, Math.PI * 2, maxValue, arcOpts );
+          startRadian = drawingWhole( ctx, this.state.elements, startRadian, stepMaxRadian, Math.PI * 2, maxValue, arcOpts );
         }
     }.call( this ) );
   }

@@ -26,7 +26,7 @@
     return fn;
   };
 
-  CanvasState.prototype.removeListener = function( type, cb) {
+  CanvasState.prototype.removeListener = function( type, cb ) {
     this.canvas.addEventListener( type, fn );
   };
 
