@@ -23,6 +23,12 @@ module.exports = function( grunt ) {
   };
 
   config.watch = {
+    configFiles: {
+      files: [ 'Gruntfile.js' ],
+      options: {
+        reload: true
+      }
+    },
     js: {
       files: [ 'src/{,*}*.js' ],
       tasks: [ 'jshint', 'build-dev' ],
@@ -36,8 +42,10 @@ module.exports = function( grunt ) {
       },
       files: [
         'index.html',
-        'site/{,*/}*.*'
-      ]
+        'site/{,*/}*.*',
+        'src/{,*/}*.*'
+      ],
+      tasks: [ 'jshint', 'build-dev' ]
     }
   };
 
