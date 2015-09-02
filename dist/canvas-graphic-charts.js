@@ -681,6 +681,7 @@
     this.startRadian = startRadian;
     this.endRadian   = endRadian;
     this.opts        = opts;
+    this.innerRatio  = 3;
 
     if ( this.color ) ctx.fillStyle = this.color;
 
@@ -697,10 +698,11 @@
     }
 
     if ( opts.inner ) {
+      this.innerRadius = this.pie.radius / this.innerRatio * 2;
       ctx.beginPath();
       ctx.fillStyle = opts.strokeColor;
       ctx.moveTo( this.pie.x, this.pie.y );
-      ctx.arc( this.pie.x, this.pie.y, this.pie.radius / 3 * 2, startRadian, endRadian, false );
+      ctx.arc( this.pie.x, this.pie.y, this.innerRadius, startRadian, endRadian, false );
       ctx.closePath();
       ctx.fill();
     }
@@ -736,7 +738,14 @@
    */
   DonutSlice.prototype.contains = function ( mx, my ) { 
     this.defineArc();
-    return this.ctx.isPointInPath( mx, my );
+    var px = mx - this.pie.x,
+        py = my - this.pie.y,
+        position = ( px * px + py * py );
+    
+    // check if is inside the outer radius
+    return this.ctx.isPointInPath( mx, my ) && 
+      position < ( this.pie.radius * this.pie.radius ) && 
+      position > ( this.innerRadius * this.innerRadius );
   };
   
 
